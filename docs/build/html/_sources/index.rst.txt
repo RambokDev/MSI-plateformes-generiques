@@ -10,6 +10,7 @@ Welcome to MSI-plateformes-generique's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   ur.backend
    others
 
 Indices and tables

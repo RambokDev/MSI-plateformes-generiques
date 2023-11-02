@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ur.backend.commands.ur_commands &mdash; MSI-plateformes-generique 0.0.1 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=f6245a2f"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            MSI-plateformes-generique
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../ur.backend.html">UR backend package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../others.html">Other functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">MSI-plateformes-generique</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ur.backend.commands.ur_commands</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ur.backend.commands.ur_commands</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">moveit_commander</span>
+<span class="kn">import</span> <span class="nn">moveit_msgs.msg</span>
+<span class="kn">import</span> <span class="nn">geometry_msgs.msg</span>
+<span class="kn">import</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">tau</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">fabs</span><span class="p">,</span> <span class="n">cos</span>
+<span class="kn">from</span> <span class="nn">std_msgs.msg</span> <span class="kn">import</span> <span class="n">String</span>
+<span class="kn">from</span> <span class="nn">moveit_commander.conversions</span> <span class="kn">import</span> <span class="n">pose_to_list</span>
+<span class="kn">from</span> <span class="nn">ur_msgs.srv</span> <span class="kn">import</span> <span class="n">SetIO</span>
+<span class="kn">from</span> <span class="nn">ur_msgs.msg</span> <span class="kn">import</span> <span class="n">IOStates</span>
+
+
+<div class="viewcode-block" id="all_close"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.all_close">[docs]</a><span class="k">def</span> <span class="nf">all_close</span><span class="p">(</span><span class="n">goal</span><span class="p">,</span> <span class="n">actual</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience method for testing if the values in two lists are within a tolerance of each other.</span>
+<span class="sd">    For Pose and PoseStamped inputs, the angle between the two quaternions is compared (the angle</span>
+<span class="sd">    between the identical orientations q and -q is calculated correctly).</span>
+<span class="sd">    @param: goal       A list of floats, a Pose or a PoseStamped</span>
+<span class="sd">    @param: actual     A list of floats, a Pose or a PoseStamped</span>
+<span class="sd">    @param: tolerance  A float</span>
+<span class="sd">    @returns: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">goal</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">goal</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">actual</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">-</span> <span class="n">goal</span><span class="p">[</span><span class="n">index</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">tolerance</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">goal</span><span class="p">)</span> <span class="ow">is</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">PoseStamped</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">all_close</span><span class="p">(</span><span class="n">goal</span><span class="o">.</span><span class="n">pose</span><span class="p">,</span> <span class="n">actual</span><span class="o">.</span><span class="n">pose</span><span class="p">,</span> <span class="n">tolerance</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">goal</span><span class="p">)</span> <span class="ow">is</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Pose</span><span class="p">:</span>
+        <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">z0</span><span class="p">,</span> <span class="n">qx0</span><span class="p">,</span> <span class="n">qy0</span><span class="p">,</span> <span class="n">qz0</span><span class="p">,</span> <span class="n">qw0</span> <span class="o">=</span> <span class="n">pose_to_list</span><span class="p">(</span><span class="n">actual</span><span class="p">)</span>
+        <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z1</span><span class="p">,</span> <span class="n">qx1</span><span class="p">,</span> <span class="n">qy1</span><span class="p">,</span> <span class="n">qz1</span><span class="p">,</span> <span class="n">qw1</span> <span class="o">=</span> <span class="n">pose_to_list</span><span class="p">(</span><span class="n">goal</span><span class="p">)</span>
+        <span class="c1"># Euclidean distance</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">dist</span><span class="p">((</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">z1</span><span class="p">),</span> <span class="p">(</span><span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">z0</span><span class="p">))</span>
+        <span class="c1"># phi = angle between orientations</span>
+        <span class="n">cos_phi_half</span> <span class="o">=</span> <span class="n">fabs</span><span class="p">(</span><span class="n">qx0</span> <span class="o">*</span> <span class="n">qx1</span> <span class="o">+</span> <span class="n">qy0</span> <span class="o">*</span> <span class="n">qy1</span> <span class="o">+</span> <span class="n">qz0</span> <span class="o">*</span> <span class="n">qz1</span> <span class="o">+</span> <span class="n">qw0</span> <span class="o">*</span> <span class="n">qw1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">tolerance</span> <span class="ow">and</span> <span class="n">cos_phi_half</span> <span class="o">&gt;=</span> <span class="n">cos</span><span class="p">(</span><span class="n">tolerance</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="convert_deg_to_rad"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.convert_deg_to_rad">[docs]</a><span class="k">def</span> <span class="nf">convert_deg_to_rad</span><span class="p">(</span><span class="n">tab</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    this function allow you to convert deg to rad.</span>
+<span class="sd">    @param: tab</span>
+<span class="sd">    @returns: list     A list named res</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tab</span><span class="p">:</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">180</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<div class="viewcode-block" id="MoveGroupPythonInterface"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface">[docs]</a><span class="k">class</span> <span class="nc">MoveGroupPythonInterface</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MoveGroupPythonInterface&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MoveGroupPythonInterface</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1">## First initialize `moveit_commander`_ and a `rospy`_ node:</span>
+        <span class="n">moveit_commander</span><span class="o">.</span><span class="n">roscpp_initialize</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s2">&quot;move_group_python_interface&quot;</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1">## Instantiate a `RobotCommander` object. Provides information such as the robot&#39;s</span>
+        <span class="c1">## kinematic model and the robot&#39;s current joint states</span>
+        <span class="n">robot</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">RobotCommander</span><span class="p">()</span>
+        <span class="c1">## Instantiate a `PlanningSceneInterface`_ object.  This provides a remote interface</span>
+        <span class="c1">## for getting, setting, and updating the robot&#39;s internal understanding of the</span>
+        <span class="c1">## surrounding world:</span>
+        <span class="n">scene</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">PlanningSceneInterface</span><span class="p">()</span>
+        <span class="c1">## Instantiate a `MoveGroupCommander`_ object.  This object is an interface</span>
+        <span class="c1">## to a planning group (group of joints).</span>
+        <span class="c1">## This interface can be used to plan and execute motions:</span>
+        <span class="n">group_name</span> <span class="o">=</span> <span class="s2">&quot;manipulator&quot;</span>
+        <span class="n">move_group</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveGroupCommander</span><span class="p">(</span><span class="n">group_name</span><span class="p">)</span>
+        <span class="c1">## Create a `DisplayTrajectory` ROS publisher which is used to display</span>
+        <span class="c1">## trajectories in Rviz:</span>
+        <span class="n">display_trajectory_publisher</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Publisher</span><span class="p">(</span>
+            <span class="s2">&quot;/move_group/display_planned_path&quot;</span><span class="p">,</span>
+            <span class="n">moveit_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">DisplayTrajectory</span><span class="p">,</span>
+            <span class="n">queue_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1">## Getting Basic Information</span>
+        <span class="c1"># We can get the name of the reference frame for this robot:</span>
+        <span class="n">planning_frame</span> <span class="o">=</span> <span class="n">move_group</span><span class="o">.</span><span class="n">get_planning_frame</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;============ Planning frame: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">planning_frame</span><span class="p">)</span>
+        <span class="c1"># We can also print the name of the end-effector link for this group:</span>
+        <span class="n">eef_link</span> <span class="o">=</span> <span class="n">move_group</span><span class="o">.</span><span class="n">get_end_effector_link</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;============ End effector link: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">eef_link</span><span class="p">)</span>
+        <span class="c1"># We can get a list of all the groups in the robot:</span>
+        <span class="n">group_names</span> <span class="o">=</span> <span class="n">robot</span><span class="o">.</span><span class="n">get_group_names</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;============ Available Planning Groups:&quot;</span><span class="p">,</span> <span class="n">robot</span><span class="o">.</span><span class="n">get_group_names</span><span class="p">())</span>
+        <span class="c1"># Sometimes for debugging it is useful to print the entire state of the</span>
+        <span class="c1"># robot:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;============ Printing robot state&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">robot</span><span class="o">.</span><span class="n">get_current_state</span><span class="p">())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="c1"># Misc variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robot</span> <span class="o">=</span> <span class="n">robot</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span> <span class="o">=</span> <span class="n">move_group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">display_trajectory_publisher</span> <span class="o">=</span> <span class="n">display_trajectory_publisher</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planning_frame</span> <span class="o">=</span> <span class="n">planning_frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eef_link</span> <span class="o">=</span> <span class="n">eef_link</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_names</span> <span class="o">=</span> <span class="n">group_names</span>
+        <span class="c1"># init variable préhension</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_movement</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="MoveGroupPythonInterface.event_callback"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface.event_callback">[docs]</a>    <span class="k">def</span> <span class="nf">event_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">digital_in_states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">digital_in_states</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stop_movement</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="MoveGroupPythonInterface.prehension"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface.prehension">[docs]</a>    <span class="k">def</span> <span class="nf">prehension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pose</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Partie en développement au moment de l&#39;arrêt du MSI S1 2022/2023</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Initialize node</span>
+        <span class="c1"># rospy.init_node(&#39;moveit_example&#39;)</span>
+
+        <span class="c1"># Initialize moveit_commander</span>
+        <span class="c1"># moveit_commander.roscpp_initialize(sys.argv)</span>
+
+        <span class="c1"># Create group commander</span>
+        <span class="c1"># group = moveit_commander.MoveGroupCommander(&quot;arm&quot;)</span>
+
+        <span class="c1"># Create subscriber</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">Subscriber</span><span class="p">(</span><span class="s2">&quot;ur_hardware_interface/io_states&quot;</span><span class="p">,</span> <span class="n">IOStates</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_callback</span><span class="p">)</span>
+        <span class="c1"># print(msg.digital_in_states[0].state)</span>
+
+        <span class="c1"># Create publisher</span>
+        <span class="c1"># move_pub = rospy.Publisher(&quot;move_topic&quot;, String, queue_size=10)</span>
+
+        <span class="c1"># Set target pose or joint values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">set_pose_target</span><span class="p">(</span><span class="n">pose</span><span class="p">)</span>
+        <span class="c1"># or</span>
+        <span class="c1"># self.move_group.set_joint_value_target(...)</span>
+
+        <span class="c1"># Plan and execute movement</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">go</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;premier success&#39;</span><span class="p">,</span> <span class="n">success</span><span class="p">)</span>
+
+        <span class="c1"># Wait for movement to finish or for stop signal</span>
+        <span class="c1"># while not self.stop_movement and not self.move_group.get_current_state() == moveit_msgs.msg.MoveItErrorCodes.SUCCESS:</span>
+        <span class="c1">#     rospy.sleep(0.1)</span>
+        <span class="c1">#     print(self.move_group.get_current_state())</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">stop_movement</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># and success == False:</span>
+            <span class="c1"># print(&#39;in&#39;)</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;out&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop_movement</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># Stop movement</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">clear_pose_targets</span><span class="p">()</span></div>
+
+        <span class="c1"># Send stop signal via publisher</span>
+        <span class="c1"># self.move_pub.publish(&quot;stopped&quot;)</span>
+
+<div class="viewcode-block" id="MoveGroupPythonInterface.go_to_joint_state"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface.go_to_joint_state">[docs]</a>    <span class="k">def</span> <span class="nf">go_to_joint_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joint_goal</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Go to a joint state</span>
+<span class="sd">        Example : [0, -2*pi/8, 0, -2*pi/4, 0, 2*pi/6]</span>
+<span class="sd">        @param: joint_goal       A list of floats in radian, a value per joint</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## Planning to a Joint Goal</span>
+        <span class="c1">## ^^^^^^^^^^^^^^^^^^^^^^^^</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">joint_goal</span><span class="p">)</span>
+        <span class="c1"># The go command can be called with joint values, poses, or without any</span>
+        <span class="c1"># parameters if you have already set the pose or joint target for the group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">go</span><span class="p">(</span><span class="n">joint_goal</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;1&#39;</span><span class="p">)</span>
+        <span class="c1"># Calling ``stop()`` ensures that there is no residual movement</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="c1"># For testing:</span>
+        <span class="n">current_joints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">get_current_joint_values</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">all_close</span><span class="p">(</span><span class="n">joint_goal</span><span class="p">,</span> <span class="n">current_joints</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MoveGroupPythonInterface.go_to_pose_goal"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface.go_to_pose_goal">[docs]</a>    <span class="k">def</span> <span class="nf">go_to_pose_goal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pose_goal</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Go to a pose goal in the end-effector frame</span>
+<span class="sd">        (To change the method set_pose_reference_frame(), to go to a position with any orientation see set_position_target())</span>
+<span class="sd">        Example : list of 6 floats [x, y, z, rot_x, rot_y, rot_z] or a list of 7 floats (see quaternions) [x, y, z, qx, qy, qz, qw]</span>
+<span class="sd">        Example : [0.4, 0.1, 0.4, 0, 0, 0, 1]</span>
+<span class="sd">        @param: pose       A list of floats</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">## Planning to a Pose Goal</span>
+        <span class="c1">## ^^^^^^^^^^^^^^^^^^^^^^^</span>
+        <span class="c1">## We can plan a motion for this group to a desired pose for the</span>
+        <span class="c1">## end-effector:</span>
+        <span class="n">liste</span> <span class="o">=</span> <span class="n">pose_goal</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">pose_goal</span> <span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Pose</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">liste</span><span class="p">)</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">liste</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">liste</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transformations</span><span class="o">.</span><span class="n">quaternion_from_euler</span><span class="p">(</span><span class="n">liste</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">liste</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">liste</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">set_pose_target</span><span class="p">(</span><span class="n">pose_goal</span><span class="p">)</span>
+
+        <span class="c1">## Now, we call the planner to compute the plan and execute it.</span>
+        <span class="c1"># `go()` returns a boolean indicating whether the planning and execution was successful.</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">go</span><span class="p">(</span><span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Calling `stop()` ensures that there is no residual movement</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="c1"># It is always good to clear your targets after planning with poses.</span>
+        <span class="c1"># Note: there is no equivalent function for clear_joint_value_targets().</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">clear_pose_targets</span><span class="p">()</span>
+
+        <span class="c1"># For testing:</span>
+        <span class="c1"># Note that since this section of code will not be included in the tutorials</span>
+        <span class="c1"># we use the class variable rather than the copied state variable</span>
+        <span class="n">current_pose</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">get_current_pose</span><span class="p">()</span><span class="o">.</span><span class="n">pose</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">current_pose</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Result for all_close function : </span><span class="si">{</span><span class="n">all_close</span><span class="p">(</span><span class="n">pose_goal</span><span class="p">,</span><span class="w"> </span><span class="n">current_pose</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_close</span><span class="p">(</span><span class="n">pose_goal</span><span class="p">,</span> <span class="n">current_pose</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MoveGroupPythonInterface.plan_cartesian_path"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface.plan_cartesian_path">[docs]</a>    <span class="k">def</span> <span class="nf">plan_cartesian_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waypoints</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute a path from a list of pose</span>
+<span class="sd">        Example of pose : list of 6 floats [x, y, z, rot_x, rot_y, rot_z] or a list of 7 floats (see quaternions) [x, y, z, qx, qy, qz, qw]</span>
+<span class="sd">        Example of path :   [[0.4, 0.1, 0.4, 0, 0, 0, 1],</span>
+<span class="sd">                            [0.4, 0.3, 0.3, 0, 0, 0, 1],</span>
+<span class="sd">                            [0.1, 0.1, 0.4, 0, 0, 0, 1],</span>
+<span class="sd">                            [0, 0.1, 0.4, 0, 0, 0, 1]]</span>
+<span class="sd">        @param: waypoints       A two dim array of float</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## Cartesian Paths</span>
+        <span class="c1">## ^^^^^^^^^^^^^^^</span>
+        <span class="c1">## You can plan a Cartesian path directly by specifying a list of waypoints</span>
+        <span class="c1">## for the end-effector to go through. If executing  interactively in a</span>
+        <span class="c1">## Python shell, set scale = 1.0.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">waypoints</span><span class="p">)):</span>
+            <span class="n">pose_goal</span> <span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Pose</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">6</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">transformations</span><span class="o">.</span><span class="n">quaternion_from_euler</span><span class="p">(</span><span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">3</span><span class="p">],</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">4</span><span class="p">],</span> <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="mi">5</span><span class="p">])</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">pose_goal</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">waypoints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pose_goal</span>
+
+        <span class="c1"># We want the Cartesian path to be interpolated at a resolution of 1 cm</span>
+        <span class="c1"># which is why we will specify 0.01 as the eef_step in Cartesian</span>
+        <span class="c1"># translation.  We will disable the jump threshold by setting it to 0.0,</span>
+        <span class="c1"># ignoring the check for infeasible jumps in joint space, which is sufficient</span>
+        <span class="c1"># for this tutorial.</span>
+        <span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">fraction</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">compute_cartesian_path</span><span class="p">(</span>
+            <span class="n">waypoints</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.0</span>  <span class="c1"># waypoints to follow  # eef_step</span>
+        <span class="p">)</span>  <span class="c1"># jump_threshold</span>
+
+        <span class="c1"># Note: We are just planning, not asking move_group to actually move the robot yet:</span>
+        <span class="k">return</span> <span class="n">plan</span><span class="p">,</span> <span class="n">fraction</span></div>
+
+<div class="viewcode-block" id="MoveGroupPythonInterface.execute_plan"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.MoveGroupPythonInterface.execute_plan">[docs]</a>    <span class="k">def</span> <span class="nf">execute_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Execute a planned path</span>
+<span class="sd">        @param: plan       A plan path from the method compute_cartesian_path()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">## BEGIN_SUB_TUTORIAL execute_plan</span>
+        <span class="c1">##</span>
+        <span class="c1">## Executing a Plan</span>
+        <span class="c1">## ^^^^^^^^^^^^^^^^</span>
+        <span class="c1">## Use execute if you would like the robot to follow</span>
+        <span class="c1">## the plan that has already been computed:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">move_group</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
+
+        <span class="c1">## **Note:** The robot&#39;s current joint state must be within some tolerance of the</span>
+        <span class="c1">## first waypoint in the `RobotTrajectory`_ or ``execute()`` will fail</span>
+        <span class="c1">## END_SUB_TUTORIAL</span>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../../ur.backend.commands.html#ur.backend.commands.ur_commands.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------------------------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Welcome to the MoveIt MoveGroup Python Interface&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------------------------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Press Ctrl-D to exit at any time&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting up the moveit_commander ...&quot;</span><span class="p">)</span>
+        <span class="n">tutorial</span> <span class="o">=</span> <span class="n">MoveGroupPythonInterface</span><span class="p">()</span>
+
+        <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;============ Press `Enter` to execute a movement using a joint state goal ...&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;go_to_joint_state([0, -2*pi/8, 0, -2*pi/4, 0, 2*pi/6])&quot;</span><span class="p">)</span>
+        <span class="n">tutorial</span><span class="o">.</span><span class="n">go_to_joint_state</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">/</span> <span class="mi">6</span><span class="p">])</span>
+
+        <span class="c1"># input(&quot;============ Press `Enter` to execute a movement using a pose goal ...&quot;)</span>
+        <span class="c1"># print(&quot;go_to_pose_goal([0, -0.8, 0, -1.6, 0, 1]))&quot;)</span>
+        <span class="c1"># tutorial.go_to_pose_goal([1, 1, 1, 0, 0, 0, 1])</span>
+
+        <span class="c1"># input(&quot;============ Press `Enter` to plan and display a Cartesian path ...&quot;)</span>
+        <span class="c1"># print(&quot;plan_cartesian_path([[0.4, 0.1, 0.4, 0, 0, 0, 1], [0.4, 0.3, 0.3, 0, 0, 0, 1], [0.1, 0.1, 0.4, 0, 0, 0, 1], [0, 0.1, 0.4, 0, 0, 0, 1]])&quot;)</span>
+        <span class="c1"># cartesian_plan, fraction = tutorial.plan_cartesian_path(    [[0.4, 0.1, 0.4, 0, 0, 0, 1],</span>
+        <span class="c1">#                                                             [0.4, 0.3, 0.3, 0, 0, 0, 1],</span>
+        <span class="c1">#                                                             [0.1, 0.1, 0.4, 0, 0, 0, 1],</span>
+        <span class="c1">#                                                             [0, 0.1, 0.4, 0, 0, 0, 1]])</span>
+
+        <span class="c1"># input(&quot;============ Press `Enter` to execute a saved path ...&quot;)</span>
+        <span class="c1"># tutorial.execute_plan(cartesian_plan)</span>
+
+    <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSInterruptException</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+        <span class="k">return</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Charles GAUTHEREAU.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
